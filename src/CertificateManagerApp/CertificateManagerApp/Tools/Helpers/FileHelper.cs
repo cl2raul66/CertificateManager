@@ -5,8 +5,6 @@ namespace CertificateManagerApp.Tools;
 
 public class FileHelper
 {
-    string pickerTitle = (string)(Application.Current?.Resources["lang:FileHelper_PickerTitle"] ?? string.Empty);
-
     public static async Task<string> LoadProjectFile()
     {
         var projectFile = await FilePicker.Default.PickAsync();
@@ -38,8 +36,20 @@ public class FileHelper
 
         foreach (var property in properties)
         {
-            var value = property.GetValue(projectInfo)?.ToString() ?? "null";
-            result.AppendLine($"{property.Name}: {value}");
+            var value = property.GetValue(projectInfo);
+
+            if (value is HashSet<string> capabilities)
+            {
+                _ = result.AppendLine(
+                    capabilities.Count > 0
+                    ? $"{property.Name}: {string.Join(", ", capabilities)}"
+                    : $"{property.Name}: null"
+                );
+            }
+            else
+            {
+                result.AppendLine($"{property.Name}: {value?.ToString() ?? "null"}");
+            }
         }
 
         return result.ToString();

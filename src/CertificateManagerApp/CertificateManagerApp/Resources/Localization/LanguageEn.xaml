@@ -5,5 +5,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
     <x:String x:Key="lang:PgMain_LbTitle">Certificate Management</x:String>
+    <x:String x:Key="lang:PgMain_LbTitleCertificates">Certificates</x:String>
+    <x:String x:Key="lang:PgMain_TtBtnDeleteCertificate">Delete selected item.</x:String>
+    <x:String x:Key="lang:PgMain_LbTitleOperations">Operations</x:String>
+    <x:String x:Key="lang:PgMain_TtBtnAddCertificate">Add new certificate.</x:String>
+    <x:String x:Key="lang:PgMain_TtBtnLoadProject">Load project to certify.</x:String>
+    <x:String x:Key="lang:PgMain_TtBtnCancelCertificate">Cancel new certificate.</x:String>
+    <x:String x:Key="lang:PgMain_LbTitleProjectInformation">Project Information:</x:String>
 
 </ResourceDictionary>

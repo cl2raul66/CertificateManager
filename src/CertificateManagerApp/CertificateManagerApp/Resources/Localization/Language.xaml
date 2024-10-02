@@ -4,7 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <x:String x:Key="lang:FileHelper_PickerTitle">Cargar solución del proyecto</x:String>
+    <!--<x:String x:Key="lang:FileHelper_PickerTitle">Cargar solución del proyecto</x:String>-->
 
     <x:String x:Key="lang:PgMain_LbTitle">Administración de certificados</x:String>
     <x:String x:Key="lang:PgMain_LbTitleCertificates">Certificados</x:String>

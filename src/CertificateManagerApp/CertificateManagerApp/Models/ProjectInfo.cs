@@ -9,4 +9,5 @@ public class ProjectInfo
     public bool UsesWPF { get; set; }
     public bool UsesWinForms { get; set; }
     public string? Sdk { get; set; }
+    public HashSet<string>? ProjectCapabilities { get; set; }
 }

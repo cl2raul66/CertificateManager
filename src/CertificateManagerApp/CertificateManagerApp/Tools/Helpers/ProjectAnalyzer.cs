@@ -16,15 +16,19 @@ public partial class ProjectAnalyzer
                 Sdk = DetermineSdk(doc)
             };
 
-            var propertyGroup = doc.Root?.Elements("PropertyGroup").FirstOrDefault();
-            if (propertyGroup != null)
+            var propertyGroups = doc.Root?.Elements("PropertyGroup");
+            if (propertyGroups is not null && propertyGroups.Any())
             {
-                projectInfo.TargetFramework = DetermineTargetFramework(propertyGroup);
-                projectInfo.OutputType = DetermineOutputType(propertyGroup);
-                projectInfo.UsesWPF = DetermineUseWPF(propertyGroup);
-                projectInfo.UsesWinForms = DetermineUseWinForms(propertyGroup);
+                foreach (var propertyGroup in propertyGroups)
+                {
+                    projectInfo.TargetFramework = DetermineTargetFramework(propertyGroup) ?? projectInfo.TargetFramework;
+                    projectInfo.OutputType = DetermineOutputType(propertyGroup) ?? projectInfo.OutputType;
+                    projectInfo.UsesWPF |= DetermineUseWPF(propertyGroup);
+                    projectInfo.UsesWinForms |= DetermineUseWinForms(propertyGroup);
+                }
             }
 
+            DetermineProjectCapabilities(doc, projectInfo);
             projectInfo.ProjectType = DetermineProjectType(projectInfo);
 
             return projectInfo;
@@ -56,63 +60,18 @@ public partial class ProjectAnalyzer
     #region EXTRA
     static readonly Dictionary<string, string> SdkToProjectType = new()
     {
-        // SDKs Web y Cloud
-        { "Microsoft.NET.Sdk.Web", "ASP.NET Core Web Application" },
-        { "Microsoft.NET.Sdk.Razor", "Razor Class Library" },
-        { "Microsoft.NET.Sdk.BlazorWebAssembly", "Blazor WebAssembly Application" },
-        { "Microsoft.NET.Sdk.Worker", "Worker Service" },
-        { "Microsoft.NET.Sdk.Function", "Azure Functions" },
-        { "Microsoft.NET.Sdk.Azure", "Azure Project" },
-        { "Microsoft.NET.Sdk.SignalRClient", "SignalR Client" },
-        { "Microsoft.NET.Sdk.WebSdk", "Web SDK" },
-
-        // SDKs Desktop
-        { "Microsoft.NET.Sdk.WindowsDesktop", "Windows Desktop Application" },
-        { "Microsoft.NET.Sdk.Wpf", "WPF Application" },
-        { "Microsoft.NET.Sdk.WindowsForms", "Windows Forms Application" },
-        
-        // SDKs Móvil y Multiplataforma
-        { "Microsoft.NET.Sdk.Maui", "MAUI Application" },
-        { "Microsoft.NET.Sdk.Android", "Android Application" },
-        { "Microsoft.NET.Sdk.iOS", "iOS Application" },
-        { "Microsoft.NET.Sdk.MacCatalyst", "Mac Catalyst Application" },
-        { "Microsoft.NET.Sdk.MacOS", "macOS Application" },
-        { "Microsoft.NET.Sdk.tvOS", "tvOS Application" },
-        { "Microsoft.NET.Sdk.Tizen", "Tizen Application" },
-
-        // SDKs Juegos
-        { "Microsoft.NET.Sdk.Unity", "Unity Project" },
-        { "Microsoft.NET.Sdk.UnityGameCore", "Unity Game Core" },
-
-        // SDKs IoT y Dispositivos
-        { "Microsoft.NET.Sdk.IoT", "IoT Application" },
-        { "Microsoft.NET.Sdk.Device", "Device Application" },
-        { "Microsoft.NET.Sdk.Nano", "Nano Framework" },
-
-        // SDKs Extensiones y Herramientas
-        { "Microsoft.NET.Sdk.Razor.Tool", "Razor Tool" },
-        { "Microsoft.VisualStudio.Windows.Forms.DesignTools.WpfDesigner", "WPF Designer" },
-        { "Microsoft.NET.Sdk.ProjectCreationTools", "Project Creation Tool" },
-        { "Microsoft.NET.Sdk.SharedFramework.Ref", "Shared Framework Reference" },
-        { "Microsoft.NET.Sdk.Web.ProjectSystem", "Web Project System" },
-        { "Microsoft.NET.Sdk.Publish", "Publish Tool" },
-        
-        // SDKs Pruebas
-        { "Microsoft.NET.Test.Sdk", "Test Project" },
-        { "Microsoft.NET.Sdk.Templates", "Template Project" },
-
-        // SDKs Básicos y Otros
-        { "Microsoft.NET.Sdk", "General .NET Project" },
-        { "Microsoft.NET.Sdk.IL", "IL Project" },
-        { "Microsoft.NET.Sdk.WindowsAppSDK", "Windows App SDK" },
-        { "Microsoft.NET.Sdk.NodeJs", "NodeJS .NET Project" },
-        { "Microsoft.NET.Sdk.WebAssembly", "WebAssembly Project" },
-        { "Microsoft.NET.Sdk.Runtime", "Runtime Project" },
-        { "Microsoft.NET.Sdk.Composite", "Composite Project" },
-        { "Microsoft.NET.Sdk.DefaultItems", "Default Items Project" },
-        { "Microsoft.NET.Sdk.Publish.Tasks", "Publish Tasks" },
-        { "Microsoft.NET.Sdk.ClientApp", "Client Application" },
-        { "Microsoft.NET.Sdk.Web.Application.Ref", "Web Application Reference" }
+        { "Microsoft.NET.Sdk", "Proyecto .NET" },
+        { "Microsoft.NET.Sdk.Web", "Aplicación web ASP.NET Core" },
+        { "Microsoft.NET.Sdk.Razor", "Biblioteca Razor" },
+        { "Microsoft.NET.Sdk.BlazorWebAssembly", "Aplicación Blazor WebAssembly" },
+        { "Microsoft.NET.Sdk.Worker", "Servicio Worker" },
+        { "Microsoft.NET.Sdk.WindowsDesktop", "Aplicación de Escritorio Windows" },
+        { "Microsoft.NET.Sdk.Maui", "Aplicación .NET MAUI" },
+        { "Microsoft.NET.Sdk.iOS", "Aplicación iOS" },
+        { "Microsoft.NET.Sdk.Android", "Aplicación Android" },
+        { "Microsoft.NET.Sdk.MacCatalyst", "Aplicación MacCatalyst" },
+        { "Microsoft.NET.Sdk.tvOS", "Aplicación tvOS" },
+        { "Microsoft.NET.Sdk.Function", "Azure Functions" }
     };
 
     static string DetermineSdk(XDocument doc)
@@ -122,21 +81,19 @@ public partial class ProjectAnalyzer
 
     static string DetermineLanguage(XDocument doc)
     {
-        // Por defecto asumimos C#, pero podríamos expandir esto para detectar otros lenguajes
+        // Podríamos expandir esto para detectar otros lenguajes si es necesario
         return "C#";
     }
 
-    static string DetermineTargetFramework(XElement propertyGroup)
+    static string? DetermineTargetFramework(XElement propertyGroup)
     {
-        var targetFramework = propertyGroup.Element("TargetFramework")?.Value;
-        var targetFrameworks = propertyGroup.Element("TargetFrameworks")?.Value;
-
-        return targetFramework ?? targetFrameworks ?? "No especificado";
+        return propertyGroup.Element("TargetFramework")?.Value ??
+               propertyGroup.Element("TargetFrameworks")?.Value;
     }
 
-    static string DetermineOutputType(XElement propertyGroup)
+    static string? DetermineOutputType(XElement propertyGroup)
     {
-        return propertyGroup.Element("OutputType")?.Value ?? string.Empty;
+        return propertyGroup.Element("OutputType")?.Value;
     }
 
     static bool DetermineUseWPF(XElement propertyGroup)
@@ -149,35 +106,63 @@ public partial class ProjectAnalyzer
         return bool.TryParse(propertyGroup.Element("UseWindowsForms")?.Value, out bool result) && result;
     }
 
+
+    static void DetermineProjectCapabilities(XDocument doc, ProjectInfo projectInfo)
+    {
+        var itemGroups = doc.Root?.Elements("ItemGroup");
+        if (itemGroups != null)
+        {
+            projectInfo!.ProjectCapabilities ??= [];
+            foreach (var itemGroup in itemGroups)
+            {
+                var projectCapabilities = itemGroup.Elements("ProjectCapability")
+                    .Select(e => e.Attribute("Include")?.Value)
+                    .Where(v => !string.IsNullOrEmpty(v));
+
+                foreach (var capability in projectCapabilities)
+                {
+                    projectInfo!.ProjectCapabilities.Add(capability!);
+                }
+            }
+        }
+    }
+
     static string DetermineProjectType(ProjectInfo info)
     {
-        if (SdkToProjectType.TryGetValue(info.Sdk!, out string? baseType))
+        // Primero, intentamos determinar por SDK
+        if (SdkToProjectType.TryGetValue(info.Sdk!, out string? sdkType))
         {
+            // Para Microsoft.NET.Sdk, necesitamos más análisis
             if (info.Sdk == "Microsoft.NET.Sdk")
             {
                 return DetermineNetSdkProjectType(info);
             }
-            else if (info.Sdk == "Microsoft.NET.Sdk.WindowsDesktop")
-            {
-                return DetermineWindowsDesktopProjectType(info);
-            }
-            return baseType;
+            return sdkType;
         }
-        return "SDK no reconocido";
+
+        // Si no encontramos por SDK, usamos otras propiedades
+        return DetermineProjectTypeByProperties(info);
     }
 
     static string DetermineNetSdkProjectType(ProjectInfo info)
     {
-        return info.OutputType!.ToLowerInvariant() switch
+        // Verificar primero por capacidades específicas
+        if (info.ProjectCapabilities!.Contains("TestContainer"))
         {
+            return "Proyecto de Pruebas";
+        }
+
+        // Luego por OutputType
+        return info.OutputType?.ToLowerInvariant() switch
+        {
+            "library" => "Biblioteca de Clases",
             "exe" => "Aplicación de Consola",
             "winexe" => "Aplicación de Windows",
-            "library" => "Biblioteca de Clases",
-            _ => "Proyecto .NET"
+            _ => "Biblioteca de Clases" // Por defecto, asumimos biblioteca si no hay OutputType
         };
     }
 
-    static string DetermineWindowsDesktopProjectType(ProjectInfo info)
+    static string DetermineProjectTypeByProperties(ProjectInfo info)
     {
         if (info.UsesWPF && info.UsesWinForms)
         {
@@ -191,7 +176,22 @@ public partial class ProjectAnalyzer
         {
             return "Aplicación Windows Forms";
         }
-        return "Aplicación de Escritorio Windows";
+
+        // Verificar capacidades específicas del proyecto
+        if (info.ProjectCapabilities!.Contains("Maui"))
+        {
+            return "Aplicación .NET MAUI";
+        }
+        if (info.ProjectCapabilities.Contains("XamarinAndroid"))
+        {
+            return "Aplicación Xamarin.Android";
+        }
+        if (info.ProjectCapabilities.Contains("XamariniOS"))
+        {
+            return "Aplicación Xamarin.iOS";
+        }
+
+        return "Tipo de proyecto no identificado";
     }
     #endregion
 }
