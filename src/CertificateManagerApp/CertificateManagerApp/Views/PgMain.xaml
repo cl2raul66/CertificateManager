@@ -3,13 +3,95 @@
     x:Class="CertificateManagerApp.Views.PgMain"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    Title="PgMain">
+    xmlns:ctk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Title="PgMain"
+    Shell.NavBarIsVisible="False">
 
-    <VerticalStackLayout>
-        <Label
-            HorizontalOptions="Center"
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" />
-    </VerticalStackLayout>
+    <Grid
+        Padding="8"
+        ColumnDefinitions="*,300"
+        ColumnSpacing="8"
+        RowDefinitions="auto,*,auto"
+        RowSpacing="8">
+        <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,auto">
+            <Label
+                FontSize="18"
+                Text="{StaticResource lang:PgMain_LbTitle}"
+                TextTransform="Uppercase"
+                VerticalOptions="Center" />
+        </Grid>
+        <Grid
+            Grid.Row="1"
+            RowDefinitions="auto,*"
+            RowSpacing="8">
+            <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,auto">
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    Text="{StaticResource lang:PgMain_LbTitleCertificates}"
+                    VerticalOptions="Center" />
+                <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                    <Button
+                        Style="{StaticResource OnlyIconButon}"
+                        Text="{StaticResource ico:UiDelete}"
+                        ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnDeleteCertificate}" />
+                </HorizontalStackLayout>
+            </Grid>
+            <ScrollView Grid.Row="1">
+                <CollectionView />
+            </ScrollView>
+        </Grid>
+        <Grid
+            Grid.Row="1"
+            Grid.Column="1"
+            RowDefinitions="auto,*"
+            RowSpacing="8">
+            <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,auto">
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    Text="{StaticResource lang:PgMain_LbTitleOperations}"
+                    VerticalOptions="Center" />
+                <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                    <Button
+                        Style="{StaticResource OnlyIconButon}"
+                        Text="{StaticResource ico:UiAdd}"
+                        ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnAddCertificate}" />
+                    <BoxView Style="{StaticResource HorizontalElementSeparator}" />
+                    <Button
+                        Style="{StaticResource OnlyIconButon}"
+                        Text="{StaticResource ico:UiFolder}"
+                        ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnLoadProject}" />
+                    <Button
+                        Style="{StaticResource OnlyIconButon}"
+                        Text="{StaticResource ico:UiClose}"
+                        ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnCancelCertificate}" />
+                </HorizontalStackLayout>
+            </Grid>
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout Spacing="8">
+                    <Grid RowDefinitions="auto,auto">
+                        <Label FontSize="14" Text="{StaticResource lang:PgMain_LbTitleProjectInformation}" />
+                        <Label
+                            FontSize="14"
+                            Text=""
+                            TextColor="{StaticResource Gray400}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+        <Grid
+            Grid.Row="2"
+            Grid.ColumnSpan="2"
+            ColumnDefinitions="auto,*,auto">
+            <Label
+                Grid.Column="1"
+                FontAttributes="Bold"
+                FontSize="12"
+                HorizontalOptions="Center"
+                Text="by R and A Media lab, Group"
+                VerticalOptions="Center" />
+        </Grid>
+    </Grid>
 
 </ContentPage>
