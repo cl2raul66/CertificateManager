@@ -4,7 +4,9 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:ctk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:CertificateManagerApp.ViewModels"
     Title="PgMain"
+    x:DataType="vm:PgMainViewModel"
     Shell.NavBarIsVisible="False">
 
     <Grid
@@ -59,10 +61,12 @@
                         ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnAddCertificate}" />
                     <BoxView Style="{StaticResource HorizontalElementSeparator}" />
                     <Button
+                        Command="{Binding LoadProjectCommand}"
                         Style="{StaticResource OnlyIconButon}"
-                        Text="{StaticResource ico:UiFolder}"
+                        Text="{StaticResource ico:FilesStack}"
                         ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnLoadProject}" />
                     <Button
+                        IsEnabled="{Binding ProjectInfo, Converter={ctk:IsStringNotNullOrEmptyConverter}}"
                         Style="{StaticResource OnlyIconButon}"
                         Text="{StaticResource ico:UiClose}"
                         ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnCancelCertificate}" />
@@ -73,8 +77,9 @@
                     <Grid RowDefinitions="auto,auto">
                         <Label FontSize="14" Text="{StaticResource lang:PgMain_LbTitleProjectInformation}" />
                         <Label
+                            Grid.Row="1"
                             FontSize="14"
-                            Text=""
+                            Text="{Binding ProjectInfo}"
                             TextColor="{StaticResource Gray400}" />
                     </Grid>
                 </VerticalStackLayout>

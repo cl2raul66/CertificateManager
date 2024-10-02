@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Maui;
+﻿using CertificateManagerApp.ViewModels;
+using CertificateManagerApp.Views;
+using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 
 namespace CertificateManagerApp;
@@ -17,8 +19,10 @@ public static class MauiProgram
                 fonts.AddFont("icofont.ttf", "icofont");
             });
 
+        builder.Services.AddSingleton<PgMain, PgMainViewModel>();
+
 #if DEBUG
-		builder.Logging.AddDebug();
+        builder.Logging.AddDebug();
 #endif
 
         return builder.Build();

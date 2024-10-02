@@ -1,0 +1,12 @@
+﻿namespace CertificateManagerApp.Models;
+
+public class ProjectInfo
+{
+    public string? Language { get; set; }
+    public string? TargetFramework { get; set; }
+    public string? ProjectType { get; set; }
+    public string? OutputType { get; set; }
+    public bool UsesWPF { get; set; }
+    public bool UsesWinForms { get; set; }
+    public string? Sdk { get; set; }
+}

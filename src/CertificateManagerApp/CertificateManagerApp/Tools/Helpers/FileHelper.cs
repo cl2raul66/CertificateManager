@@ -1,84 +1,48 @@
-﻿using CommunityToolkit.Maui.Storage;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using CertificateManagerApp.Models;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace CertificateManagerApp.Tools;
 
 public class FileHelper
 {
-    static readonly string DIR_DB = Path.Combine(AppContext.BaseDirectory, "Data");
+    string pickerTitle = (string)(Application.Current?.Resources["lang:FileHelper_PickerTitle"] ?? string.Empty);
 
-    public static string GetFileDbPath(string db_filename)
+    public static async Task<string> LoadProjectFile()
     {
-        if (!Directory.Exists(DIR_DB))
+        var projectFile = await FilePicker.Default.PickAsync();
+        if (projectFile is not null)
         {
-            Directory.CreateDirectory(DIR_DB);
-        }
-
-        return Path.Combine(DIR_DB, $"{db_filename}.db");
-    }
-
-    public static string CachePath => FileSystem.Current.CacheDirectory;
-
-    public static async Task DeleteFilesAndDirectoriesAsync(string[] paths)
-    {
-        foreach (var path in paths)
-        {
-            if (File.Exists(path))
+            var projectInfo = await ProjectAnalyzer.AnalyzeProjectFileFromPath(projectFile.FullPath);
+            if (projectInfo is not null)
             {
-                await Task.Run(() => File.Delete(path));
-            }
-            else if (Directory.Exists(path))
-            {
-                await Task.Run(() => Directory.Delete(path, true));
+                return GetProjectInfoString(projectInfo);
             }
         }
+        return string.Empty;
     }
 
-    public static async Task ExportTemplate(string[] src)
+    //public static async Task LoadFolder()
+    //{
+    //    var folderResult = await FolderPicker.Default.PickAsync(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+    //    if (folderResult.IsSuccessful)
+    //    {
+
+    //    }
+    //}
+
+    #region EXTRA
+    static string GetProjectInfoString(ProjectInfo projectInfo)
     {
-        var folderResult = await FolderPicker.Default.PickAsync(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
-        if (folderResult.IsSuccessful)
+        var properties = projectInfo.GetType().GetProperties();
+        var result = new StringBuilder();
+
+        foreach (var property in properties)
         {
-            foreach (var item in src)
-            {
-                using Stream inputStream = File.OpenRead(item);
-                string fileName = Path.GetFileName(item);
-                string destinationPath = Path.Combine(folderResult.Folder!.Path, fileName);
-                using FileStream outputStream = File.Create(destinationPath);
-                await inputStream.CopyToAsync(outputStream);
-            }
+            var value = property.GetValue(projectInfo)?.ToString() ?? "null";
+            result.AppendLine($"{property.Name}: {value}");
         }
+
+        return result.ToString();
     }
-
-    public static async Task<IEnumerable<FileResult>> OpenFileGPL()
-    {
-        var customFileType = new FilePickerFileType(
-                new Dictionary<DevicePlatform, IEnumerable<string>>
-                {
-                    { DevicePlatform.WinUI, new[] { ".gpl", ".gpl" } }, // file extension
-                });
-
-        PickOptions options = new()
-        {
-            PickerTitle = "Por favor seleccione uno o varios ficheros de paleta de GIMP",
-            FileTypes = customFileType,
-        };
-
-        try
-        {
-            var result = await FilePicker.Default.PickMultipleAsync(options);
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex);
-        }
-
-        return [];
-    }
+    #endregion
 }
