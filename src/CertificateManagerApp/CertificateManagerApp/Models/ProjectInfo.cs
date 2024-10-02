@@ -8,6 +8,7 @@ public class ProjectInfo
     public string? OutputType { get; set; }
     public bool UsesWPF { get; set; }
     public bool UsesWinForms { get; set; }
+    public bool UsesMaui { get; set; }
     public string? Sdk { get; set; }
     public HashSet<string>? ProjectCapabilities { get; set; }
 }

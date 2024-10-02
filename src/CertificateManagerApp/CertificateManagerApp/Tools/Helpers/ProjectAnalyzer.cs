@@ -25,6 +25,7 @@ public partial class ProjectAnalyzer
                     projectInfo.OutputType = DetermineOutputType(propertyGroup) ?? projectInfo.OutputType;
                     projectInfo.UsesWPF |= DetermineUseWPF(propertyGroup);
                     projectInfo.UsesWinForms |= DetermineUseWinForms(propertyGroup);
+                    projectInfo.UsesMaui |= DetermineUseMaui(propertyGroup);
                 }
             }
 
@@ -106,6 +107,10 @@ public partial class ProjectAnalyzer
         return bool.TryParse(propertyGroup.Element("UseWindowsForms")?.Value, out bool result) && result;
     }
 
+    static bool DetermineUseMaui(XElement propertyGroup)
+    {
+        return bool.TryParse(propertyGroup.Element("UseMaui")?.Value, out bool result) && result;
+    }
 
     static void DetermineProjectCapabilities(XDocument doc, ProjectInfo projectInfo)
     {
@@ -129,7 +134,14 @@ public partial class ProjectAnalyzer
 
     static string DetermineProjectType(ProjectInfo info)
     {
-        // Primero, intentamos determinar por SDK
+        // Primero, verificamos si es un proyecto MAUI
+        if (info.UsesMaui || info.Sdk == "Microsoft.NET.Sdk.Maui" ||
+            (info.ProjectCapabilities?.Contains("Maui") ?? false))
+        {
+            return "Aplicación .NET MAUI";
+        }
+
+        // Luego, intentamos determinar por SDK
         if (SdkToProjectType.TryGetValue(info.Sdk!, out string? sdkType))
         {
             // Para Microsoft.NET.Sdk, necesitamos más análisis
