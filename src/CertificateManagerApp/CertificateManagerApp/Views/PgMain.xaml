@@ -56,6 +56,7 @@
                     VerticalOptions="Center" />
                 <HorizontalStackLayout Grid.Column="1" Spacing="4">
                     <Button
+                        IsEnabled="{Binding ProjectInfo, Converter={ctk:IsStringNotNullOrEmptyConverter}}"
                         Style="{StaticResource OnlyIconButon}"
                         Text="{StaticResource ico:UiAdd}"
                         ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnAddCertificate}" />
@@ -66,7 +67,7 @@
                         Text="{StaticResource ico:FilesStack}"
                         ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnLoadProject}" />
                     <Button
-                        IsEnabled="{Binding ProjectInfo, Converter={ctk:IsStringNotNullOrEmptyConverter}}"
+                        Command="{Binding CancelCertificateCommand}"
                         Style="{StaticResource OnlyIconButon}"
                         Text="{StaticResource ico:UiClose}"
                         ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnCancelCertificate}" />
@@ -75,10 +76,20 @@
             <ScrollView Grid.Row="1">
                 <VerticalStackLayout Spacing="8">
                     <Grid RowDefinitions="auto,auto">
-                        <Label FontSize="14" Text="{StaticResource lang:PgMain_LbTitleProjectInformation}" />
+                        <Grid ColumnDefinitions="*,auto" ColumnSpacing="8">
+                            <Label FontSize="14" Text="{StaticResource lang:PgMain_LbTitleProjectInformation}" />
+                            <ActivityIndicator
+                                Grid.Column="1"
+                                HeightRequest="14"
+                                HorizontalOptions="Center"
+                                IsRunning="{Binding IsBuilding}"
+                                VerticalOptions="Center"
+                                WidthRequest="14" />
+                        </Grid>
                         <Label
                             Grid.Row="1"
                             FontSize="14"
+                            LineBreakMode="WordWrap"
                             Text="{Binding ProjectInfo}"
                             TextColor="{StaticResource Gray400}" />
                     </Grid>
@@ -88,7 +99,21 @@
         <Grid
             Grid.Row="2"
             Grid.ColumnSpan="2"
-            ColumnDefinitions="auto,*,auto">
+            ColumnDefinitions="*,auto,*"
+            ColumnSpacing="8">
+            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                <Label
+                    FontSize="14"
+                    Text="{Binding WorkInfo, StringFormat='Build:', TargetNullValue=' ', FallbackValue=' '}"
+                    TextColor="{StaticResource Tertiary}"
+                    VerticalOptions="Center" />
+                <Label
+                    FontSize="14"
+                    LineBreakMode="HeadTruncation"
+                    Text="{Binding WorkInfo, TargetNullValue=' ', FallbackValue=' '}"
+                    TextColor="{StaticResource Tertiary}"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
             <Label
                 Grid.Column="1"
                 FontAttributes="Bold"
