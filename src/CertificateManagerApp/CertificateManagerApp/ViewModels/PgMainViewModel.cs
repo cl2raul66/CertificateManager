@@ -2,6 +2,7 @@
 using CertificateManagerApp.Tools;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 using System.Text;
 
 namespace CertificateManagerApp.ViewModels;
@@ -15,6 +16,7 @@ public partial class PgMainViewModel : ObservableRecipient
         projectAnalyzerForMAUI_Serv = projectAnalyzerForMAUI_Service;
     }
 
+    #region OPERACIONES
     [ObservableProperty]
     string? projectInfo;
 
@@ -23,6 +25,15 @@ public partial class PgMainViewModel : ObservableRecipient
 
     [ObservableProperty]
     bool isBuilding;
+
+    [ObservableProperty]
+    ObservableCollection<string>? targetFrameworks;
+
+    [ObservableProperty]
+    string? selectedTargetFramework;
+
+    [ObservableProperty]
+    string? targetFrameworksForCertifying;
 
     [RelayCommand]
     async Task CancelCertificate()
@@ -88,6 +99,7 @@ public partial class PgMainViewModel : ObservableRecipient
                 infoOut.AppendLine("Target frameworks:");
                 infoOut.AppendJoin(Environment.NewLine, matchingResults.Keys);
                 ProjectInfo = infoOut.ToString();
+                TargetFrameworks = [.. matchingResults.Keys];
             }
         }
         catch (OperationCanceledException)
@@ -100,4 +112,11 @@ public partial class PgMainViewModel : ObservableRecipient
             WorkInfo = null;
         }
     }
+
+    [RelayCommand]
+    void AddTargetFrameworksForCertifying()
+    {
+        TargetFrameworksForCertifying = SelectedTargetFramework;
+    }
+    #endregion
 }

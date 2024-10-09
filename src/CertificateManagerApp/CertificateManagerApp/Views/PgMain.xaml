@@ -68,6 +68,7 @@
                         ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnLoadProject}" />
                     <Button
                         Command="{Binding CancelCertificateCommand}"
+                        IsEnabled="{Binding IsBuilding}"
                         Style="{StaticResource OnlyIconButon}"
                         Text="{StaticResource ico:UiClose}"
                         ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnCancelCertificate}" />
@@ -75,9 +76,12 @@
             </Grid>
             <ScrollView Grid.Row="1">
                 <VerticalStackLayout Spacing="8">
-                    <Grid RowDefinitions="auto,auto">
+                    <Grid RowDefinitions="auto,auto" RowSpacing="4">
                         <Grid ColumnDefinitions="*,auto" ColumnSpacing="8">
-                            <Label FontSize="14" Text="{StaticResource lang:PgMain_LbTitleProjectInformation}" />
+                            <Label
+                                FontSize="14"
+                                Text="{StaticResource lang:PgMain_LbTitleProjectInformation}"
+                                VerticalOptions="Center" />
                             <ActivityIndicator
                                 Grid.Column="1"
                                 HeightRequest="14"
@@ -93,6 +97,38 @@
                             Text="{Binding ProjectInfo}"
                             TextColor="{StaticResource Gray400}" />
                     </Grid>
+                    <Grid
+                        IsVisible="{Binding ProjectInfo, Converter={ctk:IsStringNotNullOrEmptyConverter}}"
+                        RowDefinitions="auto,auto,auto"
+                        RowSpacing="4">
+                        <Label
+                            FontSize="14"
+                            Text="Certificados:"
+                            VerticalOptions="Center" />
+                        <Grid
+                            Grid.Row="1"
+                            ColumnDefinitions="*,auto"
+                            ColumnSpacing="8">
+                            <Picker
+                                ItemsSource="{Binding TargetFrameworks}"
+                                SelectedItem="{Binding SelectedTargetFramework}"
+                                ToolTipProperties.Text="Selecciona target frameworks a certificar" />
+                            <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                                <Button
+                                    Command="{Binding AddTargetFrameworksForCertifyingCommand}"
+                                    IsEnabled="{Binding SelectedTargetFramework, Converter={ctk:IsStringNotNullOrEmptyConverter}}"
+                                    Style="{StaticResource OnlyIconButon}"
+                                    Text="{StaticResource ico:UiAdd}"
+                                    ToolTipProperties.Text="Agregar target frameworks seleccionado para certificar" />
+                            </HorizontalStackLayout>
+                        </Grid>
+                        <Label
+                            Grid.Row="2"
+                            FontSize="14"
+                            LineBreakMode="WordWrap"
+                            Text="{Binding ProjectInfo}"
+                            TextColor="{StaticResource Gray400}" />
+                    </Grid>
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>
@@ -101,7 +137,7 @@
             Grid.ColumnSpan="2"
             ColumnDefinitions="*,auto,*"
             ColumnSpacing="8">
-            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+            <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
                 <Label
                     FontSize="14"
                     Text="{Binding WorkInfo, StringFormat='Build:', TargetNullValue=' ', FallbackValue=' '}"

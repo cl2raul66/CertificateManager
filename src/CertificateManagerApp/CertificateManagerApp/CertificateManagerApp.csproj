@@ -63,15 +63,16 @@
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
 		
-		<PackageReference Include="Microsoft.Build" Version="17.4.0" ExcludeAssets="runtime" />
-		<PackageReference Include="Microsoft.Build.Framework" Version="17.4.0" ExcludeAssets="runtime" />
+		<PackageReference Include="Microsoft.Build" Version="17.11.4" ExcludeAssets="runtime" />
+		<PackageReference Include="Microsoft.Build.Framework" Version="17.11.4" ExcludeAssets="runtime" />
 		<PackageReference Include="Microsoft.Build.Locator" Version="1.7.8" />
-		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.4.0" ExcludeAssets="runtime" />
-		<PackageReference Include="Microsoft.Build.Tasks.Core" Version="17.4.0" ExcludeAssets="runtime" />
+		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.11.4" ExcludeAssets="runtime" />
+		<PackageReference Include="Microsoft.Build.Tasks.Core" Version="17.11.4" ExcludeAssets="runtime" />
 
 		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.91" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.91" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
+		<PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
