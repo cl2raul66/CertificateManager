@@ -61,7 +61,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.0" />
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
 		
 		<PackageReference Include="Microsoft.Build" Version="17.11.4" ExcludeAssets="runtime" />
 		<PackageReference Include="Microsoft.Build.Framework" Version="17.11.4" ExcludeAssets="runtime" />

@@ -72,51 +72,65 @@ public class ProjectAnalyzerForMAUI : IProjectAnalyzerForMAUI
         }
         return ["E: No es un proyecto .NET MAUI"];
     }
-
+        
     public async Task<IEnumerable<string>> BuildProjectAsync(string path, IProgress<string> progress, CancellationToken cancellationToken)
     {
         var buildOutput = new List<string>();
-        if (IsMauiApp(path))
+        if (!IsMauiApp(path))
         {
-            return await Task.Run(() =>
+            return new List<string> { "E: No es un proyecto .NET MAUI" };
+        }
+
+        return await Task.Run(() =>
+        {
+            try
             {
+                progress.Report("Iniciando compilación...");
+
                 var projectCollection = new ProjectCollection();
-                var globalProperty = new Dictionary<string, string>
+                var project = projectCollection.LoadProject(path);
+
+                project.SetProperty("Configuration", "Release");
+                project.SetProperty("RestorePackagesConfig", "false");
+
+                project.ReevaluateIfNecessary();
+
+                string assemblyName = project.GetPropertyValue("AssemblyName") ?? Path.GetFileNameWithoutExtension(path);
+                string outputPath = project.GetPropertyValue("OutputPath");
+
+                if (string.IsNullOrEmpty(outputPath))
                 {
-                    { "Configuration", "Release" }
-                };
-                var buildRequest = new BuildRequestData(path, globalProperty, null, ["Build"], null);
-
-                var logger = new ConsoleLogger(LoggerVerbosity.Minimal, line => progress.Report(line), null, null);
-
-                var buildParameters = new BuildParameters(projectCollection) { Loggers = [logger] };
-                var buildResult = BuildManager.DefaultBuildManager.Build(buildParameters, buildRequest);
-
-                if (buildResult.OverallResult is BuildResultCode.Success)
-                {
-                    var project = projectCollection.LoadProject(path);
-                    string? assemblyName = project.GetPropertyValue("AssemblyName")
-                                            ?? Path.GetFileNameWithoutExtension(path);
-
-                    project.SetGlobalProperty("Configuration", "Release");
-                    project.ReevaluateIfNecessary();
-
-                    var outputPath = project.GetPropertyValue("OutputPath");
-
-                    if (!string.IsNullOrEmpty(outputPath))
-                    {
-                        outputPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path)!, outputPath));
-                        var outputFiles = Directory.GetFiles(outputPath, "*.dll", SearchOption.AllDirectories);
-
-                        buildOutput.AddRange(outputFiles.Where(file =>
-                            Path.GetFileNameWithoutExtension(file).Contains(assemblyName, StringComparison.OrdinalIgnoreCase)));
-                    }
+                    return new List<string> { "E: No se pudo determinar la ruta de salida" };
                 }
 
-                return buildOutput;
-            }, cancellationToken);
-        }
-        return ["E: No es un proyecto .NET MAUI"];
+                string projectDir = Path.GetDirectoryName(path) ?? string.Empty;
+                string fullOutputPath = Path.GetFullPath(Path.Combine(projectDir, outputPath));
+                progress.Report($"Buscando archivos en: {fullOutputPath}");
+
+                if (Directory.Exists(fullOutputPath))
+                {
+                    var files = Directory.GetFiles(fullOutputPath, "*.dll", SearchOption.AllDirectories).Where(file => Path.GetFileNameWithoutExtension(file).Contains(assemblyName, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                    if (files.Any())
+                    {
+                        buildOutput.AddRange(files);
+                    }
+                    else
+                    {
+                        buildOutput.Add($"E: No se encontraron archivos DLL para {assemblyName}");
+                    }
+                }
+                else
+                {
+                    buildOutput.Add($"E: El directorio de salida no existe: {fullOutputPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                buildOutput.Add($"E: Error durante el proceso: {ex.Message}");
+            }
+            return buildOutput;
+        }, cancellationToken);
     }
 
     #region extra

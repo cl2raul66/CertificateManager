@@ -69,7 +69,6 @@ public partial class PgMainViewModel : ObservableRecipient
 
             token.ThrowIfCancellationRequested();
 
-            // Ejecutar BuildProjectAsync y GetMauiTargetFrameworksAsync en paralelo
             var buildTask = projectAnalyzerForMAUI_Serv.BuildProjectAsync(solutionFilePath, progress, token);
             var frameworksTask = projectAnalyzerForMAUI_Serv.GetTargetFrameworksAsync(solutionFilePath, token);
 
@@ -82,10 +81,10 @@ public partial class PgMainViewModel : ObservableRecipient
             var buildOutput = buildTask.Result;
             var targetFrameworks = frameworksTask.Result;
 
-            foreach (var tf in targetFrameworks)
+             foreach (var tf in targetFrameworks)
             {
                 var matchedLine = buildOutput.FirstOrDefault(
-                    line => line.Contains(tf, StringComparison.Ordinal));
+                    x => x.Contains(tf, StringComparison.Ordinal));
                 if (matchedLine is not null)
                 {
                     matchingResults[tf] = matchedLine;
