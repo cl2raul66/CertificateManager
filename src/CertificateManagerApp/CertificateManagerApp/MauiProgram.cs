@@ -20,6 +20,8 @@ public static class MauiProgram
                 fonts.AddFont("icofont.ttf", "icofont");
             });
 
+        builder.Services.AddSingleton<IWindowsCertificateService, WindowsCertificateService>();
+        builder.Services.AddSingleton<IWindowsCertificateFileStorageService, WindowsCertificateFileStorageService>();
         builder.Services.AddSingleton<IProjectAnalyzerForMAUI, ProjectAnalyzerForMAUI>();
 
         builder.Services.AddSingleton<PgMain, PgMainViewModel>();

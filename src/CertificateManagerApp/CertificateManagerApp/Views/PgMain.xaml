@@ -58,7 +58,7 @@
                     <Button
                         IsEnabled="{Binding ProjectInfo, Converter={ctk:IsStringNotNullOrEmptyConverter}}"
                         Style="{StaticResource OnlyIconButon}"
-                        Text="{StaticResource ico:UiAdd}"
+                        Text="{StaticResource ico:Save}"
                         ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnAddCertificate}" />
                     <BoxView Style="{StaticResource HorizontalElementSeparator}" />
                     <Button
@@ -110,13 +110,13 @@
                             ColumnDefinitions="*,auto"
                             ColumnSpacing="8">
                             <Picker
-                                ItemsSource="{Binding TargetFrameworks}"
-                                SelectedItem="{Binding SelectedTargetFramework}"
+                                ItemsSource="{Binding Platforms}"
+                                SelectedItem="{Binding SelectedPlatform}"
                                 ToolTipProperties.Text="Selecciona target frameworks a certificar" />
                             <HorizontalStackLayout Grid.Column="1" Spacing="4">
                                 <Button
                                     Command="{Binding AddTargetFrameworksForCertifyingCommand}"
-                                    IsEnabled="{Binding SelectedTargetFramework, Converter={ctk:IsStringNotNullOrEmptyConverter}}"
+                                    IsEnabled="{Binding SelectedPlatform, Converter={ctk:IsStringNotNullOrEmptyConverter}}"
                                     Style="{StaticResource OnlyIconButon}"
                                     Text="{StaticResource ico:UiAdd}"
                                     ToolTipProperties.Text="Agregar target frameworks seleccionado para certificar" />
@@ -126,7 +126,7 @@
                             Grid.Row="2"
                             FontSize="14"
                             LineBreakMode="WordWrap"
-                            Text="{Binding ProjectInfo}"
+                            Text="{Binding PlatformsForCertifying}"
                             TextColor="{StaticResource Gray400}" />
                     </Grid>
                 </VerticalStackLayout>

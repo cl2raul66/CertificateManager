@@ -10,7 +10,7 @@
     <x:String x:Key="lang:PgMain_LbTitleCertificates">Certificados</x:String>
     <x:String x:Key="lang:PgMain_TtBtnDeleteCertificate">Elimina elemento seleccionado.</x:String>
     <x:String x:Key="lang:PgMain_LbTitleOperations">Operaciones</x:String>
-    <x:String x:Key="lang:PgMain_TtBtnAddCertificate">Agregar nuevo certificado.</x:String>
+    <x:String x:Key="lang:PgMain_TtBtnAddCertificate">Almacenar certificados.</x:String>
     <x:String x:Key="lang:PgMain_TtBtnLoadProject">Cargar proyecto a certificar.</x:String>
     <x:String x:Key="lang:PgMain_TtBtnCancelCertificate">Cancelar nuevo certificado.</x:String>
     <x:String x:Key="lang:PgMain_LbTitleProjectInformation">Información del proyecto:</x:String>

@@ -27,13 +27,13 @@ public partial class PgMainViewModel : ObservableRecipient
     bool isBuilding;
 
     [ObservableProperty]
-    ObservableCollection<string>? targetFrameworks;
+    ObservableCollection<string>? platforms;
 
     [ObservableProperty]
-    string? selectedTargetFramework;
+    string? selectedPlatform;
 
     [ObservableProperty]
-    string? targetFrameworksForCertifying;
+    string? platformsForCertifying;
 
     [RelayCommand]
     async Task CancelCertificate()
@@ -51,8 +51,8 @@ public partial class PgMainViewModel : ObservableRecipient
         try
         {
             ProjectInfo = null;
-            string solutionFilePath = await FileHelper.LoadProjectFile();
-            if (string.IsNullOrEmpty(solutionFilePath)) return;
+            string projectFilePath = await FileHelper.LoadProjectFile();
+            if (string.IsNullOrEmpty(projectFilePath)) return;
 
             token.ThrowIfCancellationRequested();
 
@@ -60,7 +60,7 @@ public partial class PgMainViewModel : ObservableRecipient
             var progress = new Progress<string>(x => WorkInfo = x.Trim());
             var matchingResults = new Dictionary<string, string>();
 
-            var projectName = projectAnalyzerForMAUI_Serv.GetProjectName(solutionFilePath);
+            var projectName = projectAnalyzerForMAUI_Serv.GetProjectName(projectFilePath);
             if (projectName.StartsWith("E: "))
             {
                 ProjectInfo = projectName[3..];
@@ -69,36 +69,38 @@ public partial class PgMainViewModel : ObservableRecipient
 
             token.ThrowIfCancellationRequested();
 
-            var buildTask = projectAnalyzerForMAUI_Serv.BuildProjectAsync(solutionFilePath, progress, token);
-            var frameworksTask = projectAnalyzerForMAUI_Serv.GetTargetFrameworksAsync(solutionFilePath, token);
+            var buildTask = await projectAnalyzerForMAUI_Serv.BuildProjectAsync(projectFilePath, progress, token);
+            //var frameworksTask = projectAnalyzerForMAUI_Serv.GetTargetFrameworksAsync(projectFilePath, token);
 
             token.ThrowIfCancellationRequested();
 
-            await Task.WhenAll(buildTask, frameworksTask);
+            //await Task.WhenAll(buildTask, frameworksTask);
 
-            token.ThrowIfCancellationRequested();
+            //token.ThrowIfCancellationRequested();
 
-            var buildOutput = buildTask.Result;
-            var targetFrameworks = frameworksTask.Result;
+            //var buildOutput = buildTask.Result;
+            //var targetFrameworks = frameworksTask.Result;
 
-             foreach (var tf in targetFrameworks)
-            {
-                var matchedLine = buildOutput.FirstOrDefault(
-                    x => x.Contains(tf, StringComparison.Ordinal));
-                if (matchedLine is not null)
-                {
-                    matchingResults[tf] = matchedLine;
-                }
-            }
+            // foreach (var tf in targetFrameworks)
+            //{
+            //    var matchedLine = buildOutput.FirstOrDefault(
+            //        x => x.Contains(tf, StringComparison.Ordinal));
+            //    if (matchedLine is not null)
+            //    {
+            //        matchingResults[tf] = matchedLine;
+            //    }
+            //}
 
-            if (matchingResults.Count > 0)
+            Platforms = [.. projectAnalyzerForMAUI_Serv.ResultantOperatingSystems];
+
+            if (Platforms.Count > 0)
             {
                 StringBuilder infoOut = new();
                 infoOut.AppendLine($"Nombre: {projectName}");
                 infoOut.AppendLine("Target frameworks:");
-                infoOut.AppendJoin(Environment.NewLine, matchingResults.Keys);
+                infoOut.AppendJoin(Environment.NewLine, Platforms);
+
                 ProjectInfo = infoOut.ToString();
-                TargetFrameworks = [.. matchingResults.Keys];
             }
         }
         catch (OperationCanceledException)
@@ -115,7 +117,11 @@ public partial class PgMainViewModel : ObservableRecipient
     [RelayCommand]
     void AddTargetFrameworksForCertifying()
     {
-        TargetFrameworksForCertifying = SelectedTargetFramework;
+        PlatformsForCertifying += string.IsNullOrEmpty(PlatformsForCertifying)
+            ? SelectedPlatform
+            : Environment.NewLine + SelectedPlatform;
+
+        Platforms!.Remove(SelectedPlatform!);
     }
     #endregion
 }
