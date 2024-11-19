@@ -10,9 +10,9 @@ public interface IWindowsCertificateService
 
     void BeginTrans();
     void Commit();
-    void Delete(string id);
+    bool Delete(string id);
     IEnumerable<WindowsCertificate> GetAll();
-    void Insert(WindowsCertificate certificate);
+    string Insert(WindowsCertificate entity);
     void Rollback();
 }
 
@@ -25,7 +25,7 @@ public class WindowsCertificateService : IWindowsCertificateService
     {
         var cnxCert = new ConnectionString()
         {
-            Filename = FileHelper.GetFileDbPath("WindowsCertificates")
+            Filename = FileHelper.GetFileDbPath("WinCerts")
         };
 
         db = new LiteDatabase(cnxCert);
@@ -38,9 +38,9 @@ public class WindowsCertificateService : IWindowsCertificateService
 
     public bool Exist => collection.Count() > 0;
 
-    public void Insert(WindowsCertificate certificate)
+    public string Insert(WindowsCertificate entity)
     {
-        collection.Insert(certificate);
+        return collection.Insert(entity).AsString ?? string.Empty;
     }
 
     public IEnumerable<WindowsCertificate> GetAll()
@@ -48,8 +48,8 @@ public class WindowsCertificateService : IWindowsCertificateService
         return collection.FindAll();
     }
 
-    public void Delete(string id)
+    public bool Delete(string id)
     {
-        collection.Delete(id);
+        return collection.Delete(id);
     }
 }

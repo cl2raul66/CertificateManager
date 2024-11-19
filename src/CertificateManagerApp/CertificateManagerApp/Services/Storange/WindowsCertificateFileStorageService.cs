@@ -5,10 +5,13 @@ namespace CertificateManagerApp.Services;
 
 public interface IWindowsCertificateFileStorageService
 {
-    void Delete(string id);
+    void BeginTrans();
+    void Commit();
+    bool Delete(string id);
     IEnumerable<LiteFileInfo<string>> GetAll();
     LiteFileInfo<string>? GetFile(string id);
-    void Insert(string id, string filePath);
+    LiteFileInfo<string> Insert(string id, string filePath);
+    void Rollback();
 }
 
 public class WindowsCertificateFileStorageService : IWindowsCertificateFileStorageService
@@ -20,21 +23,36 @@ public class WindowsCertificateFileStorageService : IWindowsCertificateFileStora
     {
         var cnxFiles = new ConnectionString()
         {
-            Filename = FileHelper.GetFileDbPath("WindowsCertificateFilesStorage")
+            Filename = FileHelper.GetFileDbPath("WinCertsFilesStorage")
         };
 
         db = new LiteDatabase(cnxFiles);
         storage = db.FileStorage;
     }
 
-    public void Insert(string id, string filePath)
+    public void BeginTrans()
     {
-        storage.Upload(id, filePath);
+        db.BeginTrans();
     }
 
-    public void Delete(string id)
+    public void Rollback()
     {
-        storage.Delete(id);
+        db.Rollback();
+    }
+
+    public void Commit()
+    {
+        db.Commit();
+    }
+
+    public LiteFileInfo<string> Insert(string id, string filePath)
+    {
+        return storage.Upload(id, filePath);
+    }
+
+    public bool Delete(string id)
+    {
+        return storage.Delete(id);
     }
 
     public IEnumerable<LiteFileInfo<string>> GetAll()

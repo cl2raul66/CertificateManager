@@ -7,6 +7,7 @@
     <!--<x:String x:Key="lang:FileHelper_PickerTitle">Cargar solución del proyecto</x:String>-->
 
     <x:String x:Key="lang:PgMain_LbTitle">Administración de certificados</x:String>
+    <x:String x:Key="lang:PgMain_TtBtnSetting">Ir a configuración.</x:String>
     <x:String x:Key="lang:PgMain_LbTitleCertificates">Certificados</x:String>
     <x:String x:Key="lang:PgMain_TtBtnDeleteCertificate">Elimina elemento seleccionado.</x:String>
     <x:String x:Key="lang:PgMain_LbTitleOperations">Operaciones</x:String>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="CertificateManagerApp.Views.PgSettings"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:ctk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:m="clr-namespace:CertificateManagerApp.Models"
+    xmlns:vm="clr-namespace:CertificateManagerApp.ViewModels"
+    Title="PgSettings"
+    x:DataType="vm:PgSettingsViewModel"
+    Shell.NavBarIsVisible="False">
+    <Shell.BackButtonBehavior>
+        <BackButtonBehavior IsVisible="False" />
+    </Shell.BackButtonBehavior>
+
+    <Grid
+        Padding="8"
+        ColumnDefinitions="*,300"
+        ColumnSpacing="8"
+        RowDefinitions="auto,*,auto"
+        RowSpacing="8">
+        <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,auto">
+            <HorizontalStackLayout Spacing="8">
+                <Button
+                    Command="{Binding GoToBackCommand}"
+                    Style="{StaticResource OnlyIconButon}"
+                    Text="{StaticResource ico:UiHome}"
+                    ToolTipProperties.Text="Ir a principal." />
+                <Label
+                    FontSize="18"
+                    Text="Ajustes"
+                    TextTransform="Uppercase"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+        <ScrollView Grid.Row="1">
+            <FlexLayout AlignItems="Start">
+                <Frame>
+                    <VerticalStackLayout Spacing="8" WidthRequest="250">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="Identidad"
+                            VerticalOptions="Center" />
+                        <Grid RowDefinitions="auto,auto" RowSpacing="0">
+                            <Label Text="Nombre: *" />
+                            <Entry
+                                Grid.Row="1"
+                                Keyboard="Plain"
+                                Placeholder="Escriba aqui."
+                                Text="{Binding CommonName}" />
+                        </Grid>
+                        <Grid RowDefinitions="auto,auto" RowSpacing="0">
+                            <Label Text="Organizacion: *" />
+                            <Entry
+                                Grid.Row="1"
+                                Keyboard="Plain"
+                                Placeholder="Escriba aqui."
+                                Text="{Binding Organization}" />
+                        </Grid>
+                        <Grid RowDefinitions="auto,auto" RowSpacing="0">
+                            <Label Text="Pais (Guatemala = gt): *" />
+                            <Entry
+                                Grid.Row="1"
+                                Keyboard="Plain"
+                                Placeholder="Escriba aqui."
+                                Text="{Binding Country}" />
+                        </Grid>
+                        <Grid RowDefinitions="auto,auto" RowSpacing="0">
+                            <Label Text="Correo electronico:" />
+                            <Entry
+                                Grid.Row="1"
+                                Keyboard="Email"
+                                Placeholder="Escriba aqui."
+                                Text="{Binding Email}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,auto" ColumnSpacing="8">
+                            <HorizontalStackLayout IsVisible="{Binding IsVisibleInfo}" Spacing="4">
+                                <Label
+                                    FontFamily="icofont"
+                                    FontSize="14"
+                                    Text="{StaticResource ico:InfoCircle}"
+                                    TextColor="{StaticResource Magenta}"
+                                    VerticalOptions="Center" />
+                                <Label
+                                    FontSize="12"
+                                    LineBreakMode="WordWrap"
+                                    Text="Complete todos los requeridos (*)."
+                                    TextColor="{StaticResource Magenta}"
+                                    VerticalOptions="Center"
+                                    WidthRequest="168" />
+                            </HorizontalStackLayout>
+                            <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                                <Button
+                                    Command="{Binding AddOwnerCommand}"
+                                    Style="{StaticResource OnlyIconButon}"
+                                    Text="{StaticResource ico:UiAdd}" />
+                                <Button
+                                    Command="{Binding RemoveOwnerCommand}"
+                                    IsEnabled="{Binding SelectedOwner, Converter={ctk:IsNotNullConverter}}"
+                                    Style="{StaticResource OnlyIconButon}"
+                                    Text="{StaticResource ico:UiRemove}" />
+                            </HorizontalStackLayout>
+                        </Grid>
+                        <CollectionView
+                            ItemsSource="{Binding Owners}"
+                            SelectedItem="{Binding SelectedOwner}"
+                            SelectionChanged="OnSelectionChanged"
+                            SelectionMode="Single">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout ItemSpacing="2" Orientation="Vertical" />
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="m:Owner">
+                                    <Grid
+                                        Padding="4"
+                                        ColumnDefinitions="auto,*"
+                                        ColumnSpacing="4"
+                                        VerticalOptions="Center">
+                                        <Label
+                                            FontFamily="icofont"
+                                            FontSize="14"
+                                            Text="{StaticResource ico:BuildingAlt}"
+                                            VerticalOptions="Center" />
+                                        <Label
+                                            Grid.Column="1"
+                                            FontSize="14"
+                                            Text="{Binding CommonName}"
+                                            TextTransform="Uppercase"
+                                            VerticalOptions="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Frame>
+            </FlexLayout>
+        </ScrollView>
+        <Grid
+            Grid.Row="2"
+            Grid.ColumnSpan="2"
+            ColumnDefinitions="*,auto,*"
+            ColumnSpacing="8">
+            <Label
+                Grid.Column="1"
+                FontAttributes="Bold"
+                FontSize="12"
+                HorizontalOptions="Center"
+                Text="by R and A Media lab, Group"
+                VerticalOptions="Center" />
+        </Grid>
+    </Grid>
+
+</ContentPage>

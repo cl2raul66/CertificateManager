@@ -1,79 +1,41 @@
-﻿using Microsoft.Build.Evaluation;
+﻿using CertificateManagerApp.Tools;
+using Microsoft.Build.Evaluation;
 using Microsoft.Build.Locator;
 
 namespace CertificateManagerApp.Services;
 
-public interface IProjectAnalyzerForMAUI
+public interface IProjectAnalyzerForMAUIService
 {
-    IEnumerable<string> ResultantOperatingSystems { get; }
+    IEnumerable<TypesAppStores> ResultantOperatingSystems { get; }
+
     Task<IEnumerable<string>> BuildProjectAsync(string path, IProgress<string> progress, CancellationToken cancellationToken);
+    string GetApplicationDisplayVersion(string path);
     string GetApplicationId(string path);
+    string GetGitHubRepositoryId(string path);
     string GetProjectName(string path);
     string GetProjectNameForCertificate(string path);
-    //Task<IEnumerable<string>> GetTargetFrameworksAsync(string path, CancellationToken cancellationToken);
 }
 
-public class ProjectAnalyzerForMAUI : IProjectAnalyzerForMAUI
+public class ProjectAnalyzerForMAUIService : IProjectAnalyzerForMAUIService
 {
-    public ProjectAnalyzerForMAUI()
-    {
-        // Registrar el SDK de .NET
-        if (!MSBuildLocator.IsRegistered)
-        {
-            MSBuildLocator.RegisterDefaults();
-        }
-    }
+    readonly ProjectCollection projectCollection = new();
+    Project? project;
 
-    public IEnumerable<string> ResultantOperatingSystems { get; private set; } = [];
+    public IEnumerable<TypesAppStores> ResultantOperatingSystems { get; private set; } = [];
 
     public string GetProjectName(string path)
     {
         if (IsMauiApp(path))
         {
-            var projectCollection = new ProjectCollection();
-            var project = projectCollection.LoadProject(path);
-
-            string? projectName = project.GetPropertyValue("AssemblyName")
+            string? result = project!.GetPropertyValue("AssemblyName")
                                  ?? project.GetPropertyValue("RootNamespace")
                                  ?? project.GetPropertyValue("OutputName")
                                  ?? Path.GetFileNameWithoutExtension(path); // Fallback
 
-            return projectName ?? string.Empty;
+            return result ?? string.Empty;
         }
         return "E: No es un proyecto .NET MAUI";
     }
-
-    //public async Task<IEnumerable<string>> GetTargetFrameworksAsync(string path, CancellationToken cancellationToken)
-    //{
-    //    var targetFrameworks = new List<string>();
-    //    if (IsMauiApp(path))
-    //    {
-    //        return await Task.Run(() =>
-    //        {
-    //            var projectCollection = new ProjectCollection();
-    //            var project = projectCollection.LoadProject(path);
-
-    //            // Obtener TargetFrameworks
-    //            string targetFrameworksValue = project.GetPropertyValue("TargetFrameworks");
-    //            if (!string.IsNullOrEmpty(targetFrameworksValue))
-    //            {
-    //                targetFrameworks.AddRange(targetFrameworksValue.Split(';'));
-    //            }
-    //            else
-    //            {
-    //                // Obtener TargetFramework
-    //                string targetFrameworkValue = project.GetPropertyValue("TargetFramework");
-    //                if (!string.IsNullOrEmpty(targetFrameworkValue))
-    //                {
-    //                    targetFrameworks.Add(targetFrameworkValue);
-    //                }
-    //            }
-
-    //            return targetFrameworks;
-    //        }, cancellationToken);
-    //    }
-    //    return ["E: No es un proyecto .NET MAUI"];
-    //}
 
     public async Task<IEnumerable<string>> BuildProjectAsync(string path, IProgress<string> progress, CancellationToken cancellationToken)
     {
@@ -88,15 +50,12 @@ public class ProjectAnalyzerForMAUI : IProjectAnalyzerForMAUI
             try
             {
                 progress?.Report("Iniciando compilación...");
-                var projectCollection = new ProjectCollection();
-                var project = projectCollection.LoadProject(path);
+                project!.SetProperty("Configuration", "Release");
+                project!.SetProperty("RestorePackagesConfig", "false");
+                project!.ReevaluateIfNecessary();
 
-                project.SetProperty("Configuration", "Release");
-                project.SetProperty("RestorePackagesConfig", "false");
-                project.ReevaluateIfNecessary();
-
-                string assemblyName = project.GetPropertyValue("AssemblyName") ?? Path.GetFileNameWithoutExtension(path);
-                string outputPath = project.GetPropertyValue("OutputPath");
+                string assemblyName = project!.GetPropertyValue("AssemblyName") ?? Path.GetFileNameWithoutExtension(path);
+                string outputPath = project!.GetPropertyValue("OutputPath");
                 if (string.IsNullOrEmpty(outputPath))
                 {
                     return ["E: No se pudo determinar la ruta de salida"];
@@ -140,22 +99,19 @@ public class ProjectAnalyzerForMAUI : IProjectAnalyzerForMAUI
                 }
 
                 // Obtener sistemas operativos basados en TargetFrameworks
-                List<string> resultantOperatingSystems = new();
+                List<TypesAppStores> resultantOperatingSystems = new();
                 foreach (var framework in targetFrameworks)
                 {
                     var platform = framework switch
                     {
-                        string f when f.Contains("ios") => "iOS",
-                        string f when f.Contains("maccatalyst") => "macOS",
-                        string f when f.Contains("android") => "Android",
-                        string f when f.Contains("windows") => "Windows",
-                        _ => string.Empty
+                        string f when f.Contains("ios") => TypesAppStores.iOS,
+                        string f when f.Contains("maccatalyst") => TypesAppStores.MacCatalyst,
+                        string f when f.Contains("android") => TypesAppStores.Android,
+                        string f when f.Contains("windows") => TypesAppStores.Windows,
+                        _ => TypesAppStores.NONE
                     };
 
-                    if (!string.IsNullOrEmpty(platform) && !resultantOperatingSystems.Contains(platform))
-                    {
-                        resultantOperatingSystems.Add(platform);
-                    }
+                    resultantOperatingSystems.Add(platform);
                 }
 
                 ResultantOperatingSystems = resultantOperatingSystems;
@@ -173,17 +129,14 @@ public class ProjectAnalyzerForMAUI : IProjectAnalyzerForMAUI
     {
         if (IsMauiApp(path))
         {
-            var projectCollection = new ProjectCollection();
-            var project = projectCollection.LoadProject(path);
-
             // Probar diferentes propiedades en el orden especificado
-            string? projectName = project.GetPropertyValue("ApplicationTitle")
-                                 ?? project.GetPropertyValue("OutputName")
-                                 ?? project.GetPropertyValue("RootNamespace")
-                                 ?? project.GetPropertyValue("AssemblyName")
+            string? result = project!.GetPropertyValue("ApplicationTitle")
+                                 ?? project!.GetPropertyValue("OutputName")
+                                 ?? project!.GetPropertyValue("RootNamespace")
+                                 ?? project!.GetPropertyValue("AssemblyName")
                                  ?? Path.GetFileNameWithoutExtension(path); // Fallback
 
-            return projectName ?? string.Empty;
+            return result ?? string.Empty;
         }
         return "E: No es un proyecto .NET MAUI";
     }
@@ -192,11 +145,32 @@ public class ProjectAnalyzerForMAUI : IProjectAnalyzerForMAUI
     {
         if (IsMauiApp(path))
         {
-            var projectCollection = new ProjectCollection();
-            var project = projectCollection.LoadProject(path);
-            var applicationId = project.GetPropertyValue("ApplicationId");
+            var result = project!.GetPropertyValue("ApplicationId");
 
-            return applicationId ?? string.Empty;
+            return result ?? string.Empty;
+        }
+        return "E: No es un proyecto .NET MAUI";
+    }
+
+    public string GetApplicationDisplayVersion(string path)
+    {
+        if (IsMauiApp(path))
+        {
+            var result = project!.GetPropertyValue("ApplicationDisplayVersion")
+                                      ?? project.GetPropertyValue("Version");
+
+            return result ?? "1.0.0";
+        }
+        return "E: No es un proyecto .NET MAUI";
+    }
+
+    public string GetGitHubRepositoryId(string path)
+    {
+        if (IsMauiApp(path))
+        {
+            var result = project!.GetPropertyValue("RepositoryUrl")?.Split('/').LastOrDefault();
+
+            return result ?? string.Empty;
         }
         return "E: No es un proyecto .NET MAUI";
     }
@@ -204,8 +178,7 @@ public class ProjectAnalyzerForMAUI : IProjectAnalyzerForMAUI
     #region extra
     bool IsMauiApp(string path)
     {
-        var projectCollection = new ProjectCollection();
-        var project = projectCollection.LoadProject(path);
+        project = projectCollection.LoadProject(path);
 
         var useMauiProperty = project.AllEvaluatedProperties.FirstOrDefault(p => p.Name == "UseMaui");
 

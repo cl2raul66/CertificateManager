@@ -2,15 +2,15 @@ using CertificateManagerApp.ViewModels;
 
 namespace CertificateManagerApp.Views;
 
-public partial class PgMain : ContentPage
+public partial class PgSettings : ContentPage
 {
-    public PgMain(PgMainViewModel vm)
-    {
-        InitializeComponent();
+	public PgSettings(PgSettingsViewModel vm)
+	{
+		InitializeComponent();
 
-        vm.Initialize();
-        BindingContext = vm;
-    }
+		vm.Initialize();
+		BindingContext = vm;
+	}
 
     void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {

@@ -1,5 +1,7 @@
-﻿using CertificateManagerApp.Services;
+﻿using CertificateManagerApp.Models;
+using CertificateManagerApp.Services;
 using CertificateManagerApp.Tools;
+using CertificateManagerApp.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
@@ -9,16 +11,35 @@ namespace CertificateManagerApp.ViewModels;
 
 public partial class PgMainViewModel : ObservableRecipient
 {
-    readonly IProjectAnalyzerForMAUI projectAnalyzerForMAUI_Serv;
+    readonly IIdentityServices identityServ;
+    readonly IKeyBackupFileStorageService keyBackupFileStorageServ;
+    readonly IWindowsCertificateFileStorageService winCertFileStorageServ;
+    readonly IWindowsCertificateService winCertServ;
+    readonly IProjectAnalyzerForMAUIService projectAnalyzerForMAUIServ;
 
-    public PgMainViewModel(IProjectAnalyzerForMAUI projectAnalyzerForMAUI_Service)
+    public PgMainViewModel(IKeyBackupFileStorageService keyBackupFileStorageService, IWindowsCertificateFileStorageService windowsCertificateFileStorageService, IWindowsCertificateService windowsCertificateService, IProjectAnalyzerForMAUIService projectAnalyzerForMAUIService, IIdentityServices identityServices)
     {
-        projectAnalyzerForMAUI_Serv = projectAnalyzerForMAUI_Service;
+        identityServ = identityServices;
+        HasIdentity = identityServ.Exist;
+        keyBackupFileStorageServ = keyBackupFileStorageService;
+        winCertFileStorageServ = windowsCertificateFileStorageService;
+        winCertServ = windowsCertificateService;
+        projectAnalyzerForMAUIServ = projectAnalyzerForMAUIService;
+    }
+
+    [ObservableProperty]
+    bool hasIdentity;
+
+    [RelayCommand]
+    async Task GoToSettings()
+    {
+        IsActive = true;
+        await Shell.Current.GoToAsync(nameof(PgSettings), true);
     }
 
     #region OPERACIONES
     [ObservableProperty]
-    string? projectInfo;
+    string? projectDetails;
 
     [ObservableProperty]
     string? workInfo;
@@ -35,14 +56,18 @@ public partial class PgMainViewModel : ObservableRecipient
     [ObservableProperty]
     string? platformsForCertifying;
 
+    [ObservableProperty]
+    ProjectInfo? currentProjectInfo;
+
     [RelayCommand]
     async Task CancelCertificate()
     {
         LoadProjectCommand.Cancel();
-        ProjectInfo = null;
+        ProjectDetails = null;
         await Task.Delay(1000);
+        PlatformsForCertifying = null;
         WorkInfo = null;
-        await Task.CompletedTask;
+        CurrentProjectInfo = null;
     }
 
     [RelayCommand(IncludeCancelCommand = true)]
@@ -50,7 +75,7 @@ public partial class PgMainViewModel : ObservableRecipient
     {
         try
         {
-            ProjectInfo = null;
+            ProjectDetails = null;
             string projectFilePath = await FileHelper.LoadProjectFile();
             if (string.IsNullOrEmpty(projectFilePath)) return;
 
@@ -60,38 +85,20 @@ public partial class PgMainViewModel : ObservableRecipient
             var progress = new Progress<string>(x => WorkInfo = x.Trim());
             var matchingResults = new Dictionary<string, string>();
 
-            var projectName = projectAnalyzerForMAUI_Serv.GetProjectName(projectFilePath);
+            var projectName = projectAnalyzerForMAUIServ.GetProjectName(projectFilePath);
             if (projectName.StartsWith("E: "))
             {
-                ProjectInfo = projectName[3..];
+                ProjectDetails = projectName[3..];
                 return;
             }
 
             token.ThrowIfCancellationRequested();
 
-            var buildTask = await projectAnalyzerForMAUI_Serv.BuildProjectAsync(projectFilePath, progress, token);
-            //var frameworksTask = projectAnalyzerForMAUI_Serv.GetTargetFrameworksAsync(projectFilePath, token);
+            var buildTask = await projectAnalyzerForMAUIServ.BuildProjectAsync(projectFilePath, progress, token);
 
             token.ThrowIfCancellationRequested();
 
-            //await Task.WhenAll(buildTask, frameworksTask);
-
-            //token.ThrowIfCancellationRequested();
-
-            //var buildOutput = buildTask.Result;
-            //var targetFrameworks = frameworksTask.Result;
-
-            // foreach (var tf in targetFrameworks)
-            //{
-            //    var matchedLine = buildOutput.FirstOrDefault(
-            //        x => x.Contains(tf, StringComparison.Ordinal));
-            //    if (matchedLine is not null)
-            //    {
-            //        matchingResults[tf] = matchedLine;
-            //    }
-            //}
-
-            Platforms = [.. projectAnalyzerForMAUI_Serv.ResultantOperatingSystems];
+            Platforms = [.. projectAnalyzerForMAUIServ.ResultantOperatingSystems.Select(x => x.ToString())];
 
             if (Platforms.Count > 0)
             {
@@ -100,7 +107,14 @@ public partial class PgMainViewModel : ObservableRecipient
                 infoOut.AppendLine("Target frameworks:");
                 infoOut.AppendJoin(Environment.NewLine, Platforms);
 
-                ProjectInfo = infoOut.ToString();
+                ProjectDetails = infoOut.ToString();
+
+                CurrentProjectInfo = new()
+                {
+                    ApplicationId = projectAnalyzerForMAUIServ.GetApplicationId(projectFilePath),
+                    ApplicationTitle = projectAnalyzerForMAUIServ.GetProjectNameForCertificate(projectFilePath),
+                    ApplicationDisplayVersion = projectAnalyzerForMAUIServ.GetApplicationDisplayVersion(projectFilePath)
+                };
             }
         }
         catch (OperationCanceledException)
@@ -122,6 +136,112 @@ public partial class PgMainViewModel : ObservableRecipient
             : Environment.NewLine + SelectedPlatform;
 
         Platforms!.Remove(SelectedPlatform!);
+    }
+    #endregion
+
+    #region CERTIFICADOS
+    [ObservableProperty]
+    ObservableCollection<Certificate>? certs;
+
+    [ObservableProperty]
+    Certificate? selectedCert;
+
+    [RelayCommand]
+    void AddCert()
+    {
+        var currentPlatforms = PlatformsForCertifying!.Split(Environment.NewLine).Select(x => TypesAppStoresExtension.FromString(x));
+        if (currentPlatforms.Any())
+        {
+            foreach (var p in currentPlatforms)
+            {
+                Action theVoid = p switch
+                {
+                    TypesAppStores.Android => () => CertifyForAndroid(),
+                    TypesAppStores.Windows => () => CertifyForWindows(),
+                    _ => throw new NotImplementedException(),
+                };
+
+                theVoid();
+            }
+        }
+        CurrentProjectInfo = null;
+    }
+    #endregion
+
+    protected override void OnActivated()
+    {
+        base.OnActivated();
+
+        CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Register<PgMainViewModel, string, string>(this, "39579BB1B80F4B1F9B8D1AB2CAEEB5AB", (r, m) =>
+        {
+            IsActive = false;
+
+            if (bool.TryParse(m, out bool getM))
+            {
+                HasIdentity = getM;
+            }
+        });
+    }
+
+    public async void Initialize()
+    {
+        if (winCertServ.Exist)
+        {
+            var certsAll = winCertServ.GetAll();
+            if (certsAll is null || certsAll.Count() == 0)
+            {
+                return;
+            }
+
+            Certs = [.. certsAll.Select(x => x.ToCertificate())];
+        }
+
+        await Task.CompletedTask;
+    }
+
+    #region EXTRA
+    void CertifyForAndroid()
+    {
+        //string filePath = string.Empty;
+
+        //WindowsCertificate newWindowsCertificate = new();
+        //winCertServ.BeginTrans();
+        //var result = winCertServ.Insert(newWindowsCertificate);
+        //if (string.IsNullOrEmpty(result))
+        //{
+        //    return;
+        //}
+
+        //var fileInfo = winCertFileStorageServ.Insert(result, filePath);
+        //if (fileInfo.Id != result)
+        //{
+        //    winCertServ.Rollback();
+        //    return;
+        //}
+        //winCertServ.Commit();
+    }
+
+    void CertifyForWindows()
+    {
+        CurrentProjectInfo!.AppStore = TypesAppStores.Windows;
+
+        string filePath = string.Empty;
+
+        WindowsCertificate newWindowsCertificate = new();
+        winCertServ.BeginTrans();
+        var result = winCertServ.Insert(newWindowsCertificate);
+        if (string.IsNullOrEmpty(result))
+        {
+            return;
+        }
+
+        var fileInfo = winCertFileStorageServ.Insert(result, filePath);
+        if (fileInfo.Id != result)
+        {
+            winCertServ.Rollback();
+            return;
+        }
+        winCertServ.Commit();
     }
     #endregion
 }

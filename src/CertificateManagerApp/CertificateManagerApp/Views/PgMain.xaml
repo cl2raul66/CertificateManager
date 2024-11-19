@@ -4,12 +4,20 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:ctk="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:m="clr-namespace:CertificateManagerApp.Models"
     xmlns:vm="clr-namespace:CertificateManagerApp.ViewModels"
     Title="PgMain"
     x:DataType="vm:PgMainViewModel"
     Shell.NavBarIsVisible="False">
 
-    <Grid
+    <Grid>
+        <Label
+            FontSize="24"
+            HorizontalOptions="Center"
+            Text="Hola mundo"
+            VerticalOptions="Center" />
+    </Grid>
+    <!--<Grid
         Padding="8"
         ColumnDefinitions="*,300"
         ColumnSpacing="8"
@@ -21,9 +29,16 @@
                 Text="{StaticResource lang:PgMain_LbTitle}"
                 TextTransform="Uppercase"
                 VerticalOptions="Center" />
+            <Button
+                Grid.Column="1"
+                Command="{Binding GoToSettingsCommand}"
+                Style="{StaticResource OnlyIconButon}"
+                Text="{StaticResource ico:SettingsAlt}"
+                ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnSetting}" />
         </Grid>
         <Grid
             Grid.Row="1"
+            IsVisible="{Binding HasIdentity}"
             RowDefinitions="auto,*"
             RowSpacing="8">
             <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,auto">
@@ -34,18 +49,58 @@
                     VerticalOptions="Center" />
                 <HorizontalStackLayout Grid.Column="1" Spacing="4">
                     <Button
+                        IsEnabled="{Binding SelectedCert, Converter={ctk:IsNotNullConverter}}"
                         Style="{StaticResource OnlyIconButon}"
                         Text="{StaticResource ico:UiDelete}"
                         ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnDeleteCertificate}" />
                 </HorizontalStackLayout>
             </Grid>
             <ScrollView Grid.Row="1">
-                <CollectionView />
+                <CollectionView
+                    ItemsSource="{Binding Certs}"
+                    SelectedItem="{Binding SelectedCert}"
+                    SelectionChanged="OnSelectionChanged"
+                    SelectionMode="Single">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout
+                            HorizontalItemSpacing="2"
+                            Orientation="Horizontal"
+                            Span="5"
+                            VerticalItemSpacing="2" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="m:Certificate">
+                            <HorizontalStackLayout Padding="4" Spacing="4">
+                                <Label
+                                    FontSize="14"
+                                    Text="{Binding AppStores}"
+                                    VerticalOptions="Center" />
+                                <VerticalStackLayout>
+                                    <Label
+                                        FontSize="14"
+                                        Text="{Binding ApplicationTitle}"
+                                        TextTransform="Uppercase"
+                                        VerticalOptions="Center" />
+                                    <Label
+                                        FontSize="14"
+                                        Text="{Binding CommonName}"
+                                        TextTransform="Uppercase"
+                                        VerticalOptions="Center" />
+                                </VerticalStackLayout>
+                                <Label
+                                    FontSize="14"
+                                    Text="{Binding ExpiryTime}"
+                                    VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
             </ScrollView>
         </Grid>
         <Grid
             Grid.Row="1"
             Grid.Column="1"
+            IsVisible="{Binding HasIdentity}"
             RowDefinitions="auto,*"
             RowSpacing="8">
             <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,auto">
@@ -56,7 +111,8 @@
                     VerticalOptions="Center" />
                 <HorizontalStackLayout Grid.Column="1" Spacing="4">
                     <Button
-                        IsEnabled="{Binding ProjectInfo, Converter={ctk:IsStringNotNullOrEmptyConverter}}"
+                        Command="{Binding AddCertCommand}"
+                        IsEnabled="{Binding CurrentProjectInfo, Converter={ctk:IsNotNullConverter}}"
                         Style="{StaticResource OnlyIconButon}"
                         Text="{StaticResource ico:Save}"
                         ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnAddCertificate}" />
@@ -68,10 +124,16 @@
                         ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnLoadProject}" />
                     <Button
                         Command="{Binding CancelCertificateCommand}"
-                        IsEnabled="{Binding IsBuilding}"
                         Style="{StaticResource OnlyIconButon}"
                         Text="{StaticResource ico:UiClose}"
-                        ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnCancelCertificate}" />
+                        ToolTipProperties.Text="{StaticResource lang:PgMain_TtBtnCancelCertificate}">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{ctk:VariableMultiValueConverter ConditionType=Any, Count=2}">
+                                <Binding Path="IsBuilding" />
+                                <Binding Converter="{ctk:IsStringNotNullOrEmptyConverter}" Path="ProjectDetails" />
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
                 </HorizontalStackLayout>
             </Grid>
             <ScrollView Grid.Row="1">
@@ -94,11 +156,11 @@
                             Grid.Row="1"
                             FontSize="14"
                             LineBreakMode="WordWrap"
-                            Text="{Binding ProjectInfo}"
+                            Text="{Binding ProjectDetails}"
                             TextColor="{StaticResource Gray400}" />
                     </Grid>
                     <Grid
-                        IsVisible="{Binding ProjectInfo, Converter={ctk:IsStringNotNullOrEmptyConverter}}"
+                        IsVisible="{Binding ProjectDetails, Converter={ctk:IsStringNotNullOrEmptyConverter}}"
                         RowDefinitions="auto,auto,auto"
                         RowSpacing="4">
                         <Label
@@ -158,6 +220,6 @@
                 Text="by R and A Media lab, Group"
                 VerticalOptions="Center" />
         </Grid>
-    </Grid>
+    </Grid>-->
 
 </ContentPage>

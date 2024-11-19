@@ -10,15 +10,6 @@ public partial class App : Application
     {
         InitializeComponent();
 
-#if WINDOWS
-        Microsoft.Maui.Handlers.WindowHandler.Mapper.AppendToMapping(nameof(IWindow), (handler, view) =>
-        {
-            var nativeWindow = handler.PlatformView;
-            nativeWindow.Activate();
-            IntPtr windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(nativeWindow);
-            ShowWindow(windowHandle, 3);
-        });
-#endif
         SetCulture();
         MainPage = new AppShell();
     }
@@ -46,10 +37,5 @@ public partial class App : Application
 
         Resources.MergedDictionaries.Add(resourceDictionary);
     }
-
-#if WINDOWS
-    [DllImport("user32.dll")]
-    public static extern bool ShowWindow(IntPtr hWnd, int cmdShow);
-#endif
     #endregion
 }
